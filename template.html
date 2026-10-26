@@ -1,0 +1,793 @@
+<title>Kubeløser</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500;700&family=Rubik:wght@500;600;700&display=swap">
+<style>
+/* Layout: ét roligt app-spor. Terningens egne seks farver er den eneste farve i siden, resten er blækgrå. */
+:root {
+  --bg: #eceef1;
+  --surface: #ffffff;
+  --ink: #15181d;
+  --muted: #566070;
+  --line: #d2d7de;
+  --soft: #dfe3e9;
+  --btn: #15181d;
+  --btn-ink: #ffffff;
+  --plastic: #101215;
+  --focus: #1558c0;
+  --bad: #b3261e;
+  --good: #1b7a3a;
+  --c-white: #f3f3ee;
+  --c-yellow: #f6d200;
+  --c-red: #d3222a;
+  --c-orange: #f47f1c;
+  --c-blue: #1558c0;
+  --c-green: #1ea349;
+  --font-display: 'Rubik', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101215; --surface: #1a1d22; --ink: #eef0f3; --muted: #9ba3af; --line: #2c3139; --soft: #272b32;
+    --btn: #eef0f3; --btn-ink: #101215; --plastic: #07080a; --focus: #6aa0ff; --bad: #ff8a80; --good: #6fd08c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101215; --surface: #1a1d22; --ink: #eef0f3; --muted: #9ba3af; --line: #2c3139; --soft: #272b32;
+  --btn: #eef0f3; --btn-ink: #101215; --plastic: #07080a; --focus: #6aa0ff; --bad: #ff8a80; --good: #6fd08c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.5 var(--font-body); }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; letter-spacing: -0.015em; }
+h1 { font-size: clamp(28px, 6vw, 42px); line-height: 1.08; font-weight: 700; }
+h2 { font-size: 22px; font-weight: 600; line-height: 1.2; }
+p { margin: 0; }
+.small { font-size: 14px; }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); }
+.eyebrow { font: 600 12px/1 var(--font-body); text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+
+.shell { max-width: 1000px; margin: 0 auto; padding-block: 18px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 26px; }
+.brand { display: flex; align-items: center; gap: 10px; font: 700 21px/1 var(--font-display); letter-spacing: -0.02em; }
+.logo { width: 28px; height: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 2px; background: var(--plastic); border-radius: 6px; }
+.logo i { border-radius: 1.5px; }
+.logo i:nth-child(1) { background: var(--c-red); } .logo i:nth-child(2) { background: var(--c-white); } .logo i:nth-child(3) { background: var(--c-blue); }
+.logo i:nth-child(4) { background: var(--c-yellow); } .logo i:nth-child(5) { background: var(--c-green); } .logo i:nth-child(6) { background: var(--c-orange); }
+.logo i:nth-child(7) { background: var(--c-white); } .logo i:nth-child(8) { background: var(--c-red); } .logo i:nth-child(9) { background: var(--c-green); }
+
+.btn { font: 600 16px/1.2 var(--font-body); min-height: 48px; padding: 12px 20px; border-radius: 12px; border: 2px solid var(--ink);
+  background: var(--btn); color: var(--btn-ink); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn.small { min-height: 40px; padding: 8px 14px; font-size: 14px; }
+.btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.btn:focus-visible, .stk:focus-visible, .chip:focus-visible, .mv:focus-visible, .pal button:focus-visible, input[type=range]:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+.lead { font-size: 18px; color: var(--muted); max-width: 52ch; }
+
+/* start */
+.hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; align-items: center; margin-bottom: 40px; }
+.hero-text { display: grid; gap: 18px; justify-items: start; }
+.hold { margin: 0; display: grid; gap: 12px; justify-items: center; text-align: center; }
+.hold svg { width: min(260px, 100%); height: auto; }
+.hold figcaption { font-size: 14px; color: var(--muted); max-width: 34ch; }
+.hold figcaption strong { color: var(--ink); font-weight: 600; }
+.steps { list-style: none; padding: 0; margin: 14px 0 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.steps li b { display: block; font: 600 16px/1.2 var(--font-display); }
+.steps li b::before { content: counter(s) ". "; color: var(--muted); font-weight: 500; }
+.steps li span { font-size: 14px; color: var(--muted); }
+.mini-net { width: 100%; height: auto; display: block; }
+.mini-net .on { fill: var(--ink); } .mini-net .off { fill: var(--soft); }
+.tips { font-size: 14px; color: var(--muted); max-width: 70ch; }
+
+/* capture */
+.strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-bottom: 22px; }
+.chip { display: grid; gap: 6px; justify-items: center; padding: 8px 4px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: 500 12px/1.1 var(--font-body); min-width: 0; }
+.chip.cur { border-color: var(--ink); }
+.chip .mini { width: 100%; max-width: 46px; aspect-ratio: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 2px; background: var(--plastic); border-radius: 5px; }
+.chip .mini i { background: var(--soft); border-radius: 1px; opacity: 0.35; }
+.chip.done .mini i { opacity: 1; }
+.chip .lab { overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; }
+.cap-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.cap-left { display: grid; gap: 16px; justify-items: start; }
+.cap-left .mini-net { width: 150px; }
+.cap-right { display: grid; gap: 14px; }
+.stage { border-radius: 14px; overflow: hidden; background: #000; touch-action: none; }
+.stage canvas { display: block; width: 100%; height: auto; touch-action: none; cursor: grab; max-height: 70vh; object-fit: contain; }
+.ctrl { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px; align-items: center; font-size: 14px; }
+.ctrl input { width: 100%; accent-color: var(--ink); }
+.pv { display: grid; gap: 8px; }
+.swatches { display: grid; grid-template-columns: repeat(3, 34px); gap: 3px; padding: 3px; background: var(--plastic); border-radius: 8px; width: max-content; }
+.swatches i { width: 34px; height: 34px; border-radius: 3px; }
+
+/* review */
+.rev-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px; align-items: start; margin-top: 18px; }
+.net { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 8px; max-width: 560px; }
+.face { display: grid; gap: 4px; min-width: 0; }
+.face .cap { font: 600 10px/1 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.fg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; background: var(--plastic); border-radius: 8px; aspect-ratio: 1; }
+.stk { position: relative; border: 0; border-radius: 3px; padding: 0; cursor: pointer; min-width: 0; }
+.stk:disabled { cursor: default; }
+.stk:disabled::after { content: ""; position: absolute; inset: 36%; border-radius: 50%; border: 2px solid rgba(0,0,0,0.45); }
+.stk.warn::before { content: ""; position: absolute; top: 3px; right: 3px; width: 28%; height: 28%; border-radius: 50%; background: var(--plastic); box-shadow: 0 0 0 2px #fff; }
+.stk.sel { outline: 3px solid var(--ink); outline-offset: 1px; z-index: 1; }
+.rev-side { display: grid; gap: 16px; }
+.palette { display: grid; gap: 10px; }
+.pal { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pal button { display: flex; align-items: center; gap: 8px; padding: 8px 10px; min-height: 44px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px/1 var(--font-body); cursor: pointer; }
+.pal i { width: 20px; height: 20px; border-radius: 4px; border: 2px solid var(--plastic); flex: none; }
+.counts { display: flex; flex-wrap: wrap; gap: 8px; }
+.cnt { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font: 500 13px/1 var(--font-mono); }
+.cnt i { width: 16px; height: 16px; border-radius: 4px; border: 2px solid var(--plastic); }
+.cnt.bad { border-color: var(--bad); color: var(--bad); }
+.msg { font-size: 15px; min-height: 3em; }
+.msg.bad { color: var(--bad); } .msg.good { color: var(--good); }
+
+/* solve */
+.solve-head { display: grid; gap: 6px; margin-bottom: 18px; }
+.solve-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.viz { display: grid; gap: 14px; justify-items: center; }
+.viz svg { width: 100%; height: auto; display: block; }
+#iso { width: min(300px, 80%); }
+#netv { width: 100%; max-width: 380px; }
+.steps-col { display: grid; gap: 16px; min-width: 0; }
+.now { display: grid; gap: 10px; }
+.now-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.notation { font: 700 48px/1 var(--font-mono); letter-spacing: -0.03em; }
+.do { font: 600 20px/1.3 var(--font-display); text-wrap: balance; }
+.nav { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0; }
+.mv { font: 700 14px/1 var(--font-mono); padding: 8px 9px; min-width: 40px; border-radius: 8px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.mv.done { opacity: 0.45; }
+.mv.cur { border-color: var(--ink); background: var(--ink); color: var(--bg); opacity: 1; }
+.movestr { font: 500 14px/1.6 var(--font-mono); color: var(--muted); word-break: break-word; user-select: all; }
+.done-card { display: grid; gap: 6px; }
+.done-card h3 { font-size: 24px; }
+
+.busy { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 16px; background: color-mix(in srgb, var(--bg) 88%, transparent); font: 600 18px var(--font-display); }
+.spin { width: 44px; height: 44px; border-radius: 10px; background: conic-gradient(var(--c-red) 0 25%, var(--c-yellow) 0 50%, var(--c-green) 0 75%, var(--c-blue) 0); animation: turn 1.1s steps(4) infinite; }
+@keyframes turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+@media (max-width: 760px) {
+  .hero, .cap-grid, .rev-grid, .solve-grid { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .strip { gap: 5px; }
+  .chip { padding: 6px 2px; font-size: 11px; }
+  .notation { font-size: 40px; }
+}
+</style>
+
+<div class="shell">
+  <header class="top">
+    <div class="brand"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>Kubeløser</div>
+    <button class="btn ghost small" id="btn-reset" hidden>Start forfra</button>
+  </header>
+
+  <main>
+    <section id="s-start">
+      <div class="hero">
+        <div class="hero-text">
+          <h1>Tag seks billeder. Få løsningen.</h1>
+          <p class="lead">Hold terningen op til kameraet, en side ad gangen. Appen læser farverne, du retter eventuelle fejl, og så får du trinene til at løse den.</p>
+          <div class="actions">
+            <button class="btn" id="btn-start">Start med billederne</button>
+            <button class="btn ghost" id="btn-demo">Prøv med en eksempelterning</button>
+          </div>
+          <p class="small muted">Billederne bliver i din browser. Intet sendes nogen steder hen.</p>
+        </div>
+        <figure class="hold card">
+          <div id="hold-iso"></div>
+          <figcaption><strong>Sådan holder du terningen</strong><br>Hvid i toppen og grøn mod dig. Har din terning andre farver, vælger du selv top og forside. Bare behold dem hele vejen.</figcaption>
+        </figure>
+      </div>
+      <h2>De seks billeder</h2>
+      <ol class="steps" id="steps-list"></ol>
+      <p class="tips">Brug dagslys eller jævnt lys uden genskær, og fyld billedet med terningens side. Hold den lige, så rækkerne vandrette. Kan appen ikke åbne kameraet direkte, vælger du et billede, du allerede har taget.</p>
+    </section>
+
+    <section id="s-capture" hidden>
+      <div class="strip" id="strip"></div>
+      <div class="cap-grid">
+        <div class="cap-left">
+          <p class="eyebrow" id="cap-eyebrow"></p>
+          <h2 id="cap-title"></h2>
+          <p id="cap-text"></p>
+          <div id="cap-net"></div>
+          <div class="actions" id="cap-actions">
+            <button class="btn" id="btn-cam">Åbn kameraet</button>
+            <button class="btn ghost" id="btn-gal">Vælg et billede</button>
+          </div>
+          <p class="small muted" id="cap-err" role="status"></p>
+          <button class="btn ghost" id="btn-to-review" hidden>Gå til kontrol af farver</button>
+        </div>
+        <div class="cap-right" id="cap-right" hidden>
+          <div class="stage"><canvas id="cv" aria-label="Dit billede med et gitter, der viser hvor farverne læses"></canvas></div>
+          <p class="small muted">Træk i billedet for at flytte gitteret, så de ni felter ligger oven på terningens side.</p>
+          <div class="ctrl"><label for="r-size">Størrelse</label><input type="range" id="r-size" min="20" max="100" value="62"></div>
+          <div class="ctrl"><label for="r-angle">Drejning</label><input type="range" id="r-angle" min="-30" max="30" value="0"></div>
+          <div class="pv"><span class="small muted">Sådan læser appen farverne</span><div class="swatches" id="swatches"></div></div>
+          <div class="actions">
+            <button class="btn" id="btn-use">Brug billedet</button>
+            <button class="btn ghost" id="btn-new">Tag et nyt</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="s-review" hidden>
+      <h2>Tjek farverne</h2>
+      <p class="muted" style="margin-top:6px;max-width:60ch">Tryk på et felt for at rette farven. Felter med en prik er dem, appen er mindst sikker på. Midterfelterne ligger fast.</p>
+      <div class="rev-grid">
+        <div class="net" id="net"></div>
+        <div class="rev-side">
+          <div class="palette" id="palette" hidden>
+            <span class="small muted">Vælg farve til det markerede felt</span>
+            <div class="pal" id="pal"></div>
+          </div>
+          <div class="counts" id="counts"></div>
+          <p class="msg" id="rev-msg" role="status"></p>
+          <div class="actions">
+            <button class="btn" id="btn-solve">Løs terningen</button>
+            <button class="btn ghost" id="btn-back">Tilbage til billederne</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="s-solve" hidden>
+      <div class="solve-head">
+        <h2 id="sol-title"></h2>
+        <p class="muted" id="sol-hold"></p>
+      </div>
+      <div class="solve-grid">
+        <div class="viz card">
+          <div id="iso" role="img" aria-label="Terningen, som du ser den forfra"></div>
+          <div id="netv" role="img" aria-label="Alle seks sider foldet ud"></div>
+        </div>
+        <div class="steps-col">
+          <div class="now card" id="now" aria-live="polite"></div>
+          <div class="nav">
+            <button class="btn ghost" id="btn-prev">← Forrige</button>
+            <button class="btn" id="btn-next">Næste →</button>
+          </div>
+          <ol class="chips" id="chips"></ol>
+          <p class="movestr" id="movestr"></p>
+          <div class="actions">
+            <button class="btn ghost small" id="btn-copy">Kopiér trækkene</button>
+            <button class="btn ghost small" id="btn-jump0">Til første træk</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="busy" id="busy" hidden><div class="spin" aria-hidden="true"></div><p>Beregner løsningen</p></div>
+<input type="file" id="in-cam" accept="image/*" capture="environment" hidden>
+<input type="file" id="in-gal" accept="image/*" hidden>
+
+<script id="lib-cube">/*__CUBE__*/</script>
+<script id="lib-solve">/*__SOLVE__*/</script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- konstanter ---------- */
+  var FACES = 'URFDLB';
+  var NAMES = { U: 'Top', R: 'Højre', F: 'Forside', D: 'Bund', L: 'Venstre', B: 'Bagside' };
+  var NAME_LC = { U: 'toppen', R: 'højre side', F: 'forsiden', D: 'bunden', L: 'venstre side', B: 'bagsiden' };
+  var COLORS = ['white', 'yellow', 'red', 'orange', 'blue', 'green'];
+  var COLOR_DA = { white: 'hvid', yellow: 'gul', red: 'rød', orange: 'orange', blue: 'blå', green: 'grøn' };
+  var REF_RGB = { white: [238, 238, 232], yellow: [246, 210, 0], red: [205, 30, 40], orange: [245, 125, 20], blue: [20, 85, 190], green: [25, 160, 70] };
+  var STD_CANON = { U: 'white', R: 'red', F: 'green', D: 'yellow', L: 'orange', B: 'blue' };
+  var SOLVED = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB';
+  var CAPTURE = [
+    { f: 'F', name: 'Forside', short: 'Som du holder den.', text: 'Vælg en farve som top og en anden som forside, og behold dem hele vejen. Anbefalet er hvid i toppen og grøn mod dig. Tag billede af forsiden med toppen opad i billedet.' },
+    { f: 'R', name: 'Højre', short: 'Drej terningen, så højre side kommer om foran.', text: 'Drej hele terningen en kvart omgang, så den side, der sad til højre, vender mod dig. Toppen peger stadig opad.' },
+    { f: 'B', name: 'Bagside', short: 'Drej en kvart omgang mere.', text: 'Drej en kvart omgang mere i samme retning, så du ser bagsiden. Toppen peger stadig opad.' },
+    { f: 'L', name: 'Venstre', short: 'Drej en kvart omgang mere.', text: 'Endnu en kvart omgang i samme retning, så du ser venstre side. Toppen peger stadig opad.' },
+    { f: 'U', name: 'Top', short: 'Tilbage til start. Tip toppen mod dig.', text: 'Drej terningen en kvart omgang mere, så forsiden vender mod dig igen. Tip derefter toppen hen mod dig, så du ser den øverste side. Forsiden skal pege nedad i billedet.' },
+    { f: 'D', name: 'Bund', short: 'Tilbage til start. Tip bunden mod dig.', text: 'Gå tilbage til start med forsiden mod dig. Tip derefter bunden hen mod dig, så du ser undersiden. Forsiden skal pege opad i billedet.' }
+  ];
+
+  /* ---------- tilstand ---------- */
+  var S = { step: 0, samples: {}, grid: null, warn: {}, canon: null, sel: -1, moves: [], states: [], idx: 0 };
+  var E = null; // billede under redigering
+  function $(id) { return document.getElementById(id); }
+
+  /* ---------- farver ---------- */
+  function rgb2lab(r, g, b) {
+    function f(x) { x /= 255; return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); }
+    var R = f(r), G = f(g), B = f(b);
+    var X = (0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047, Y = 0.2126 * R + 0.7152 * G + 0.0722 * B, Z = (0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883;
+    function h(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; }
+    var fx = h(X), fy = h(Y), fz = h(Z);
+    return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+  }
+  function dist(a, b) { var dl = (a[0] - b[0]) * 0.5, da = a[1] - b[1], db = a[2] - b[2]; return Math.sqrt(dl * dl + da * da + db * db); }
+
+  /* Ungarsk metode: billigste tildeling af rækker til kolonner (rækker <= kolonner). */
+  function hungarian(a) {
+    var n = a.length, m = a[0].length, INF = 1e18;
+    var u = new Array(n + 1).fill(0), v = new Array(m + 1).fill(0), p = new Array(m + 1).fill(0), way = new Array(m + 1).fill(0);
+    for (var i = 1; i <= n; i++) {
+      p[0] = i; var j0 = 0, minv = new Array(m + 1).fill(INF), used = new Array(m + 1).fill(false);
+      do {
+        used[j0] = true; var i0 = p[j0], delta = INF, j1 = 0;
+        for (var j = 1; j <= m; j++) if (!used[j]) {
+          var cur = a[i0 - 1][j - 1] - u[i0] - v[j];
+          if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
+          if (minv[j] < delta) { delta = minv[j]; j1 = j; }
+        }
+        for (var k = 0; k <= m; k++) { if (used[k]) { u[p[k]] += delta; v[k] -= delta; } else minv[k] -= delta; }
+        j0 = j1;
+      } while (p[j0] !== 0);
+      do { var jj = way[j0]; p[j0] = p[jj]; j0 = jj; } while (j0);
+    }
+    var ans = new Array(n).fill(-1);
+    for (var c = 1; c <= m; c++) if (p[c]) ans[p[c] - 1] = c - 1;
+    return ans;
+  }
+
+  /* Klassificér alle 54 felter. Hver af de seks midter giver en farveklasse, og hver klasse har præcis 8 andre felter.
+     Lyset er forskelligt fra billede til billede, så der regnes i log-farverum, hvor en farvetone i lyset blot
+     er en konstant forskydning pr. billede. Forskydningen og farveklassernes centre estimeres skiftevis. */
+  function logv(s) { return [Math.log(s.r + 12), Math.log(s.g + 12), Math.log(s.b + 12)]; }
+  function d3(a, b) { var x = a[0] - b[0], y = a[1] - b[1], z = a[2] - b[2]; return Math.sqrt(x * x + y * y + z * z); }
+  function logRef(color) { var r = REF_RGB[color]; return [Math.log(r[0] + 12), Math.log(r[1] + 12), Math.log(r[2] + 12)]; }
+  function canonFromLogs(cents) {
+    var cost = cents.map(function (c) { return COLORS.map(function (col) { var d = d3(c, logRef(col)); return d * d; }); });
+    var res = hungarian(cost), canon = {};
+    FACES.split('').forEach(function (f, i) { canon[f] = COLORS[res[i]]; });
+    return canon;
+  }
+  function classifyAll(samples) {
+    var fl = FACES.split(''), X = {}, items = [], cl, c, it, k;
+    fl.forEach(function (f) { X[f] = samples[f].map(logv); });
+    var labCenters = fl.map(function (f) { var s = samples[f][4]; return rgb2lab(s.r, s.g, s.b); });
+    var canon = assignCanon(labCenters), cen = null, cast = {}, assign = [], pass;
+    fl.forEach(function (f) { for (var i = 0; i < 9; i++) if (i !== 4) items.push({ f: f, i: i, x: X[f][i] }); });
+    for (pass = 0; pass < 2; pass++) {
+      cen = fl.map(function (f) { return logRef(canon[f]); });
+      fl.forEach(function (f, ci) { cast[f] = [X[f][4][0] - cen[ci][0], X[f][4][1] - cen[ci][1], X[f][4][2] - cen[ci][2]]; });
+      for (it = 0; it < 6; it++) {
+        var cost = items.map(function (s) {
+          var row = [], xc = [s.x[0] - cast[s.f][0], s.x[1] - cast[s.f][1], s.x[2] - cast[s.f][2]];
+          for (cl = 0; cl < 6; cl++) { var dd = d3(xc, cen[cl]); for (k = 0; k < 8; k++) row.push(dd * dd); }
+          return row;
+        });
+        assign = hungarian(cost).map(function (col) { return Math.floor(col / 8); });
+        var cls = function (f, i) { if (i === 4) return fl.indexOf(f); return assign[items.findIndex(function (s) { return s.f === f && s.i === i; })]; };
+        fl.forEach(function (f) {                       // farvestik pr. billede
+          var sum = [0, 0, 0];
+          for (var i = 0; i < 9; i++) { var q = cen[cls(f, i)]; sum[0] += X[f][i][0] - q[0]; sum[1] += X[f][i][1] - q[1]; sum[2] += X[f][i][2] - q[2]; }
+          cast[f] = [sum[0] / 9, sum[1] / 9, sum[2] / 9];
+        });
+        var acc = fl.map(function () { return [0, 0, 0, 0]; });   // nye centre
+        fl.forEach(function (f, ci) { for (var i = 0; i < 9; i++) { var q = cls(f, i), a = acc[q]; a[0] += X[f][i][0] - cast[f][0]; a[1] += X[f][i][1] - cast[f][1]; a[2] += X[f][i][2] - cast[f][2]; a[3]++; } });
+        cen = acc.map(function (a) { return [a[0] / a[3], a[1] / a[3], a[2] / a[3]]; });
+      }
+      // juster så gennemsnitsfarven svarer til referencen, og find de rigtige farvenavne ud fra de rensede centre
+      var shift = [0, 0, 0];
+      fl.forEach(function (f, ci) { var r = logRef(canon[f]); for (var d = 0; d < 3; d++) shift[d] += (r[d] - cen[ci][d]) / 6; });
+      var adj = cen.map(function (q) { return [q[0] + shift[0], q[1] + shift[1], q[2] + shift[2]]; });
+      var next = canonFromLogs(adj), same = fl.every(function (f) { return next[f] === canon[f]; });
+      canon = next; if (same) break;
+    }
+    var grid = new Array(54), warn = {};
+    fl.forEach(function (f, ci) { grid[ci * 9 + 4] = f; });
+    items.forEach(function (s, kk) {
+      var idx = FACES.indexOf(s.f) * 9 + s.i, xc = [s.x[0] - cast[s.f][0], s.x[1] - cast[s.f][1], s.x[2] - cast[s.f][2]];
+      grid[idx] = FACES[assign[kk]];
+      var ds = cen.map(function (q) { return d3(xc, q); }), best = 0, q2;
+      for (q2 = 1; q2 < 6; q2++) if (ds[q2] < ds[best]) best = q2;
+      var second = Infinity; for (q2 = 0; q2 < 6; q2++) if (q2 !== best && ds[q2] < second) second = ds[q2];
+      if (best !== assign[kk] || second - ds[best] < WARN_MARGIN) warn[idx] = true;
+    });
+    return { grid: grid, warn: warn, canon: canon };
+  }
+  var WARN_MARGIN = 0.35;
+
+  function assignCanon(centersLab) {
+    var refs = COLORS.map(function (c) { return rgb2lab(REF_RGB[c][0], REF_RGB[c][1], REF_RGB[c][2]); });
+    var cost = centersLab.map(function (cl) { return refs.map(function (r) { var d = dist(cl, r); return d * d; }); });
+    var res = hungarian(cost), canon = {};
+    FACES.split('').forEach(function (f, i) { canon[f] = COLORS[res[i]]; });
+    return canon;
+  }
+
+  /* ---------- kontrol af terningen ---------- */
+  function _U(x) { return x - 1; } function _R(x) { return 8 + x; } function _F(x) { return 17 + x; }
+  function _D(x) { return 26 + x; } function _L(x) { return 35 + x; } function _B(x) { return 44 + x; }
+  var CF = [[_U(9), _R(1), _F(3)], [_U(7), _F(1), _L(3)], [_U(1), _L(1), _B(3)], [_U(3), _B(1), _R(3)], [_D(3), _F(9), _R(7)], [_D(1), _L(9), _F(7)], [_D(7), _B(9), _L(7)], [_D(9), _R(9), _B(7)]];
+  var EF = [[_U(6), _R(2)], [_U(8), _F(2)], [_U(4), _L(2)], [_U(2), _B(2)], [_D(6), _R(8)], [_D(2), _F(8)], [_D(4), _L(8)], [_D(8), _B(8)], [_F(6), _R(4)], [_F(4), _L(6)], [_B(6), _L(4)], [_B(4), _R(6)]];
+  var CC = [['U', 'R', 'F'], ['U', 'F', 'L'], ['U', 'L', 'B'], ['U', 'B', 'R'], ['D', 'F', 'R'], ['D', 'L', 'F'], ['D', 'B', 'L'], ['D', 'R', 'B']];
+  var EC = [['U', 'R'], ['U', 'F'], ['U', 'L'], ['U', 'B'], ['D', 'R'], ['D', 'F'], ['D', 'L'], ['D', 'B'], ['F', 'R'], ['F', 'L'], ['B', 'L'], ['B', 'R']];
+  function parity(p) { var inv = 0; for (var i = 0; i < p.length; i++) for (var j = i + 1; j < p.length; j++) if (p[i] > p[j]) inv++; return inv % 2; }
+
+  function verify(s) {
+    var counts = {}, k;
+    FACES.split('').forEach(function (f) { counts[f] = 0; });
+    for (k = 0; k < 54; k++) counts[s[k]]++;
+    var off = FACES.split('').filter(function (f) { return counts[f] !== 9; });
+    if (off.length) return { ok: false, code: 'counts', msg: 'Hver farve skal være på præcis 9 felter. Ret de farver, der er markeret rødt.' };
+    var cp = [], co = [], ep = [], eo = [], i, j, o, n;
+    for (i = 0; i < 8; i++) {
+      var t = CF[i].map(function (x) { return s[x]; }), found = false;
+      for (j = 0; j < 8 && !found; j++) for (o = 0; o < 3 && !found; o++) {
+        var okc = true; for (n = 0; n < 3; n++) if (t[(n + o) % 3] !== CC[j][n]) okc = false;
+        if (okc) { cp[i] = j; co[i] = o; found = true; }
+      }
+      if (!found) return { ok: false, code: 'piece', msg: 'Et af hjørnerne har en farvekombination, som ikke findes på en rigtig terning. Tjek felterne med prik først.' };
+    }
+    for (i = 0; i < 12; i++) {
+      var te = EF[i].map(function (x) { return s[x]; }), foundE = false;
+      for (j = 0; j < 12 && !foundE; j++) for (o = 0; o < 2 && !foundE; o++) {
+        var oke = true; for (n = 0; n < 2; n++) if (te[(n + o) % 2] !== EC[j][n]) oke = false;
+        if (oke) { ep[i] = j; eo[i] = o; foundE = true; }
+      }
+      if (!foundE) return { ok: false, code: 'piece', msg: 'En af kanterne har en farvekombination, som ikke findes på en rigtig terning. Tjek felterne med prik først.' };
+    }
+    if (new Set(cp).size !== 8 || new Set(ep).size !== 12) return { ok: false, code: 'piece', msg: 'To hjørner eller to kanter ser ens ud. Det betyder, at mindst ét felt har fået en forkert farve.' };
+    var sc = co.reduce(function (a, b) { return a + b; }, 0), se = eo.reduce(function (a, b) { return a + b; }, 0);
+    if (sc % 3 !== 0 || se % 2 !== 0 || parity(cp) !== parity(ep)) return { ok: false, code: 'parity', msg: 'Farverne passer ikke sammen, så terningen kan ikke løses. Ofte er to ens farver blandet sammen, fx rød og orange eller hvid og gul.' };
+    return { ok: true, code: 'ok', msg: 'Farverne ser rigtige ud. Terningen kan løses.' };
+  }
+
+  /* ---------- tegning ---------- */
+  function pts(a) { return a.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }
+  function add(p, v, s) { s = s === undefined ? 1 : s; return [p[0] + v[0] * s, p[1] + v[1] * s]; }
+
+  function isoSVG(state, canon, hl) {
+    var k = 30, u = [-0.866 * k, -0.5 * k], v = [0.866 * k, -0.5 * k], d = [0, k], C = [0, 0], out = '', r, c, TR, TL, BL;
+    function poly(p, letter) { return '<polygon points="' + pts(p) + '" style="fill:var(--c-' + canon[letter] + ');stroke:var(--plastic);stroke-width:1.6;stroke-linejoin:round"/>'; }
+    for (r = 0; r < 3; r++) for (c = 0; c < 3; c++) {
+      TR = add(add(C, u, 2 - c), d, r);
+      out += poly([TR, add(TR, u), add(add(TR, u), d), add(TR, d)], state[18 + r * 3 + c]);
+      TL = add(add(C, v, c), d, r);
+      out += poly([TL, add(TL, v), add(add(TL, v), d), add(TL, d)], state[9 + r * 3 + c]);
+      BL = add(add(C, u, 3 - c), v, 3 - r);
+      out += poly([BL, add(BL, u, -1), add(add(BL, u, -1), v, -1), add(BL, v, -1)], state[r * 3 + c]);
+    }
+    var hp = { F: [C, add(C, u, 3), add(add(C, u, 3), d, 3), add(C, d, 3)], R: [C, add(C, v, 3), add(add(C, v, 3), d, 3), add(C, d, 3)], U: [C, add(C, u, 3), add(add(C, u, 3), v, 3), add(C, v, 3)] };
+    ['F', 'R', 'U'].forEach(function (f) {
+      out += '<polygon points="' + pts(hp[f]) + '" style="fill:none;stroke:var(--plastic);stroke-width:3.2;stroke-linejoin:round"/>';
+    });
+    if (hl && hp[hl]) out += '<polygon points="' + pts(hp[hl]) + '" style="fill:none;stroke:var(--ink);stroke-width:4;stroke-linejoin:round;stroke-dasharray:7 4"/>';
+    return '<svg viewBox="-84 -98 168 196" xmlns="http://www.w3.org/2000/svg">' + out + '</svg>';
+  }
+
+  var NETPOS = { U: [1, 0], L: [0, 1], F: [1, 1], R: [2, 1], B: [3, 1], D: [1, 2] };
+  function netSVG(state, canon, hl, glyph) {
+    var c = 22, fw = 66, gap = 6, W = 4 * fw + 3 * gap, H = 3 * fw + 2 * gap, out = '';
+    FACES.split('').forEach(function (f, fi) {
+      var x0 = NETPOS[f][0] * (fw + gap), y0 = NETPOS[f][1] * (fw + gap);
+      out += '<rect x="' + x0 + '" y="' + y0 + '" width="' + fw + '" height="' + fw + '" rx="4" style="fill:var(--plastic)"/>';
+      for (var i = 0; i < 9; i++) {
+        out += '<rect x="' + (x0 + (i % 3) * c + 1.5) + '" y="' + (y0 + Math.floor(i / 3) * c + 1.5) + '" width="' + (c - 3) + '" height="' + (c - 3) + '" rx="2.5" style="fill:var(--c-' + canon[state[fi * 9 + i]] + ')"/>';
+      }
+      if (f === hl) {
+        out += '<rect x="' + (x0 - 2) + '" y="' + (y0 - 2) + '" width="' + (fw + 4) + '" height="' + (fw + 4) + '" rx="6" style="fill:none;stroke:var(--ink);stroke-width:3;stroke-dasharray:6 3"/>';
+        out += '<text x="' + (x0 + fw / 2) + '" y="' + (y0 + fw / 2) + '" text-anchor="middle" dominant-baseline="central" style="font:700 26px var(--font-body);fill:#000;stroke:#fff;stroke-width:4px;paint-order:stroke">' + glyph + '</text>';
+      }
+    });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' + out + '</svg>';
+  }
+
+  function miniNet(face) {
+    var s = 11, g = 1.5, out = '';
+    FACES.split('').forEach(function (f) {
+      out += '<rect x="' + NETPOS[f][0] * (s + g) + '" y="' + NETPOS[f][1] * (s + g) + '" width="' + s + '" height="' + s + '" rx="2" class="' + (f === face ? 'on' : 'off') + '"/>';
+    });
+    return '<svg class="mini-net" viewBox="0 0 ' + (4 * s + 3 * g) + ' ' + (3 * s + 2 * g) + '" aria-hidden="true">' + out + '</svg>';
+  }
+
+  /* ---------- skærmbilleder ---------- */
+  var resetArmed = null;
+  function show(name) {
+    ['start', 'capture', 'review', 'solve'].forEach(function (s) { $('s-' + s).hidden = s !== name; });
+    $('btn-reset').hidden = name === 'start';
+    S.screen = name;
+    try { window.scrollTo({ top: 0 }); } catch (e) { /* ingen scroll */ }
+  }
+
+  function initStart() {
+    $('hold-iso').innerHTML = isoSVG(SOLVED, STD_CANON, null);
+    $('steps-list').innerHTML = CAPTURE.map(function (c) {
+      return '<li>' + miniNet(c.f) + '<div><b>' + c.name + '</b><span>' + c.short + '</span></div></li>';
+    }).join('');
+  }
+
+  /* --- billede af en side --- */
+  function renderStrip() {
+    $('strip').innerHTML = CAPTURE.map(function (c, i) {
+      var smp = S.samples[c.f], cells = '';
+      for (var k = 0; k < 9; k++) cells += '<i' + (smp ? ' style="background:rgb(' + smp[k].r + ',' + smp[k].g + ',' + smp[k].b + ')"' : '') + '></i>';
+      return '<button type="button" class="chip' + (smp ? ' done' : '') + (i === S.step ? ' cur' : '') + '" data-i="' + i + '" aria-label="' + c.name + (smp ? ', taget' : ', mangler') + '"><span class="mini">' + cells + '</span><span class="lab">' + c.name + '</span></button>';
+    }).join('');
+  }
+  function allTaken() { return FACES.split('').every(function (f) { return S.samples[f]; }); }
+
+  function goStep(i) {
+    S.step = i; E = null;
+    var c = CAPTURE[i];
+    show('capture');
+    renderStrip();
+    $('cap-eyebrow').textContent = 'Billede ' + (i + 1) + ' af 6';
+    $('cap-title').textContent = c.name;
+    $('cap-text').textContent = c.text;
+    $('cap-net').innerHTML = miniNet(c.f);
+    $('cap-err').textContent = '';
+    $('cap-actions').hidden = false;
+    $('cap-right').hidden = true;
+    $('btn-to-review').hidden = !allTaken();
+  }
+  function nextStepAfter(i) {
+    for (var k = 1; k <= 6; k++) { var j = (i + k) % 6; if (!S.samples[CAPTURE[j].f]) return j; }
+    return -1;
+  }
+
+  function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+  function median(a) { a.sort(function (x, y) { return x - y; }); return a[a.length >> 1]; }
+
+  /* Læs farven i midten af hvert af de ni felter (median, så små genskær ikke vejer tungt). */
+  function sampleGrid(data, w, h, g) {
+    var cell = g.size / 3, rad = Math.max(2, cell * 0.17), ca = Math.cos(g.angle * Math.PI / 180), sa = Math.sin(g.angle * Math.PI / 180), out = [];
+    for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) {
+      var u = (c - 1) * cell, v = (r - 1) * cell;
+      var cx = g.cx + u * ca - v * sa, cy = g.cy + u * sa + v * ca;
+      var x0 = clamp(Math.floor(cx - rad), 0, w - 1), x1 = clamp(Math.ceil(cx + rad), 0, w - 1);
+      var y0 = clamp(Math.floor(cy - rad), 0, h - 1), y1 = clamp(Math.ceil(cy + rad), 0, h - 1);
+      var R = [], G = [], B = [];
+      for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) { var p = (y * w + x) * 4; R.push(data[p]); G.push(data[p + 1]); B.push(data[p + 2]); }
+      out.push({ r: median(R), g: median(G), b: median(B) });
+    }
+    return out;
+  }
+
+  function drawEditor() {
+    var cv = $('cv'), ctx = cv.getContext('2d'), g = E.g, cell = g.size / 3, lw = Math.max(2, E.w / 300), i;
+    ctx.drawImage(E.base, 0, 0);
+    ctx.save();
+    ctx.translate(g.cx, g.cy); ctx.rotate(g.angle * Math.PI / 180);
+    function path() {
+      ctx.beginPath(); ctx.rect(-1.5 * cell, -1.5 * cell, 3 * cell, 3 * cell);
+      for (i = 1; i < 3; i++) { ctx.moveTo(-1.5 * cell + i * cell, -1.5 * cell); ctx.lineTo(-1.5 * cell + i * cell, 1.5 * cell); ctx.moveTo(-1.5 * cell, -1.5 * cell + i * cell); ctx.lineTo(1.5 * cell, -1.5 * cell + i * cell); }
+    }
+    ctx.lineWidth = lw * 2.4; ctx.strokeStyle = 'rgba(0,0,0,0.7)'; path(); ctx.stroke();
+    ctx.lineWidth = lw; ctx.strokeStyle = '#fff'; path(); ctx.stroke();
+    var rad = Math.max(2, cell * 0.17);
+    for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) {
+      ctx.lineWidth = lw; ctx.strokeStyle = '#fff';
+      ctx.strokeRect((c - 1) * cell - rad, (r - 1) * cell - rad, rad * 2, rad * 2);
+    }
+    ctx.restore();
+  }
+  function updateEditor() {
+    E.samples = sampleGrid(E.data, E.w, E.h, E.g);
+    drawEditor();
+    $('swatches').innerHTML = E.samples.map(function (s) { return '<i style="background:rgb(' + s.r + ',' + s.g + ',' + s.b + ')"></i>'; }).join('');
+  }
+
+  function loadFile(file) {
+    if (!file) return;
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      var sc = Math.min(1, 1200 / Math.max(img.naturalWidth, img.naturalHeight));
+      var w = Math.max(1, Math.round(img.naturalWidth * sc)), h = Math.max(1, Math.round(img.naturalHeight * sc));
+      var base = document.createElement('canvas'); base.width = w; base.height = h;
+      var bctx = base.getContext('2d', { willReadFrequently: true });
+      bctx.drawImage(img, 0, 0, w, h);
+      var data = bctx.getImageData(0, 0, w, h).data;
+      URL.revokeObjectURL(url);
+      E = { base: base, data: data, w: w, h: h, g: { cx: w / 2, cy: h / 2, size: Math.min(w, h) * 0.62, angle: 0 }, samples: null };
+      $('cv').width = w; $('cv').height = h;
+      $('r-size').value = 62; $('r-angle').value = 0;
+      $('cap-actions').hidden = true; $('cap-err').textContent = ''; $('cap-right').hidden = false;
+      updateEditor();
+      try { $('cap-right').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* ingen scroll */ }
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); $('cap-err').textContent = 'Billedet kunne ikke åbnes. Prøv et andet.'; };
+    img.src = url;
+  }
+
+  /* --- kontrol af farver --- */
+  function buildNet() {
+    var net = $('net'); net.innerHTML = '';
+    var place = { U: [2, 1], L: [1, 2], F: [2, 2], R: [3, 2], B: [4, 2], D: [2, 3] };
+    FACES.split('').forEach(function (f, fi) {
+      var face = document.createElement('div'); face.className = 'face';
+      face.style.gridColumn = place[f][0]; face.style.gridRow = place[f][1];
+      var cap = document.createElement('div'); cap.className = 'cap'; cap.textContent = NAMES[f]; face.appendChild(cap);
+      var fg = document.createElement('div'); fg.className = 'fg';
+      for (var i = 0; i < 9; i++) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'stk'; b.dataset.i = fi * 9 + i;
+        if (i === 4) b.disabled = true;
+        fg.appendChild(b);
+      }
+      face.appendChild(fg); net.appendChild(face);
+    });
+    $('pal').innerHTML = COLORS.map(function (c) { return '<button type="button" data-c="' + c + '"><i style="background:var(--c-' + c + ')"></i>' + COLOR_DA[c] + '</button>'; }).join('');
+  }
+  function renderReview() {
+    var counts = {}; FACES.split('').forEach(function (f) { counts[f] = 0; });
+    S.grid.forEach(function (l) { counts[l]++; });
+    Array.prototype.forEach.call($('net').querySelectorAll('.stk'), function (b) {
+      var i = +b.dataset.i, l = S.grid[i], f = FACES[Math.floor(i / 9)], r = Math.floor((i % 9) / 3) + 1, c = (i % 3) + 1;
+      b.style.background = 'var(--c-' + S.canon[l] + ')';
+      b.classList.toggle('warn', !!S.warn[i] && i % 9 !== 4);
+      b.classList.toggle('sel', S.sel === i);
+      b.setAttribute('aria-label', NAMES[f] + ', række ' + r + ', felt ' + c + ': ' + COLOR_DA[S.canon[l]] + (S.warn[i] ? ' (usikker)' : '') + (i % 9 === 4 ? ' (fast midte)' : ''));
+    });
+    $('counts').innerHTML = FACES.split('').map(function (f) {
+      return '<span class="cnt' + (counts[f] !== 9 ? ' bad' : '') + '"><i style="background:var(--c-' + S.canon[f] + ')"></i>' + COLOR_DA[S.canon[f]] + ' ' + counts[f] + '/9</span>';
+    }).join('');
+    $('palette').hidden = S.sel < 0;
+    var v = verify(S.grid.join(''));
+    $('rev-msg').textContent = v.msg;
+    $('rev-msg').className = 'msg ' + (v.ok ? 'good' : 'bad');
+    $('btn-solve').disabled = !v.ok;
+  }
+  function enterReview() {
+    if (allTaken()) {
+      var res = classifyAll(S.samples);
+      S.grid = res.grid; S.warn = res.warn; S.canon = res.canon;
+    }
+    S.sel = -1;
+    show('review');
+    renderReview();
+  }
+
+  /* --- løsning --- */
+  var worker = null, waiting = {}, reqId = 0;
+  function initWorker() {
+    try {
+      var src = $('lib-cube').textContent + '\n' + $('lib-solve').textContent + '\n;' +
+        'var ready=false;self.onmessage=function(e){var m=e.data;try{if(!ready){Cube.initSolver();ready=true;}' +
+        'if(m.cmd==="solve"){self.postMessage({id:m.id,ok:true,sol:Cube.fromString(m.facelets).solve()});}else{self.postMessage({cmd:"ready"});}}' +
+        'catch(err){self.postMessage({id:m.id,ok:false,err:String(err)});}};';
+      worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+      worker.onmessage = function (e) {
+        var m = e.data;
+        if (m.id && waiting[m.id]) { var w = waiting[m.id]; delete waiting[m.id]; if (m.ok) w.res(m.sol); else w.rej(new Error(m.err)); }
+      };
+      worker.onerror = function () { worker = null; Object.keys(waiting).forEach(function (k) { var w = waiting[k]; delete waiting[k]; solveMain(w.f).then(w.res, w.rej); }); };
+      worker.postMessage({ cmd: 'init' });
+    } catch (e) { worker = null; }
+  }
+  function solveMain(f) {
+    return new Promise(function (res, rej) {
+      setTimeout(function () { try { window.Cube.initSolver(); res(window.Cube.fromString(f).solve()); } catch (e) { rej(e); } }, 40);
+    });
+  }
+  function solveAsync(f) {
+    if (!worker) return solveMain(f);
+    return new Promise(function (res, rej) { var id = ++reqId; waiting[id] = { res: res, rej: rej, f: f }; worker.postMessage({ cmd: 'solve', id: id, facelets: f }); });
+  }
+
+  function startSolve() {
+    var f = S.grid.join(''), v = verify(f);
+    if (!v.ok) { renderReview(); return; }
+    $('busy').hidden = false;
+    solveAsync(f).then(function (sol) {
+      var moves = sol && sol.trim() ? sol.trim().split(/\s+/) : [], states = [f], st = f;
+      moves.forEach(function (m) { var c = window.Cube.fromString(st); c.move(m); st = c.asString(); states.push(st); });
+      S.moves = moves; S.states = states; S.idx = 0;
+      S.fine = st === SOLVED;
+      $('busy').hidden = true;
+      show('solve'); renderSolve();
+    }).catch(function () {
+      $('busy').hidden = true;
+      $('rev-msg').textContent = 'Løsningen kunne ikke beregnes. Tjek farverne igen og prøv en gang til.';
+      $('rev-msg').className = 'msg bad';
+    });
+  }
+
+  function describe(m) {
+    var f = m[0], mod = m[1] || '', face = NAME_LC[f] + ' (' + COLOR_DA[S.canon[f]] + ')';
+    if (mod === '2') return { glyph: '2', text: 'Drej ' + face + ' en halv omgang.', sub: 'To kvartture i samme retning. Retningen er ligegyldig.' };
+    if (mod === "'") return { glyph: '↺', text: 'Drej ' + face + ' en kvart omgang mod uret.', sub: 'Mod uret, set direkte ind mod den side, du drejer.' };
+    return { glyph: '↻', text: 'Drej ' + face + ' en kvart omgang med uret.', sub: 'Med uret, set direkte ind mod den side, du drejer.' };
+  }
+
+  function renderSolve() {
+    var n = S.moves.length, i = S.idx, st = S.states[i], m = S.moves[i], d = m ? describe(m) : null;
+    $('sol-title').textContent = n === 0 ? 'Terningen er allerede løst' : 'Løsning på ' + n + ' træk';
+    $('sol-hold').textContent = 'Hold terningen med ' + COLOR_DA[S.canon.U] + ' i toppen og ' + COLOR_DA[S.canon.F] + ' mod dig, som da du tog det første billede. Behold den position hele vejen.';
+    $('iso').innerHTML = isoSVG(st, S.canon, m ? m[0] : null);
+    $('netv').innerHTML = netSVG(st, S.canon, m ? m[0] : null, d ? d.glyph : '');
+    if (m) {
+      $('now').innerHTML = '<div class="now-top"><span class="notation">' + m + '</span><span class="eyebrow">Træk ' + (i + 1) + ' af ' + n + '</span></div><p class="do">' + d.text + '</p><p class="small muted">' + d.sub + '</p>';
+    } else {
+      $('now').innerHTML = '<div class="done-card"><h3>' + (S.fine === false ? 'Noget gik galt' : 'Færdig!') + '</h3><p>' + (S.fine === false ? 'Den beregnede løsning endte ikke i en løst terning. Tjek farverne og prøv igen.' : 'Alle sider har nu én farve.') + '</p></div>';
+    }
+    $('btn-prev').disabled = i === 0;
+    $('btn-next').disabled = i >= n;
+    $('chips').innerHTML = S.moves.map(function (mv, k) {
+      return '<li><button type="button" class="mv' + (k < i ? ' done' : '') + (k === i ? ' cur' : '') + '" data-i="' + k + '" aria-label="Træk ' + (k + 1) + ': ' + mv + '">' + mv + '</button></li>';
+    }).join('');
+    $('movestr').textContent = S.moves.join(' ');
+    $('btn-copy').hidden = n === 0;
+  }
+
+  /* ---------- hændelser ---------- */
+  function resetAll() {
+    S = { step: 0, samples: {}, grid: null, warn: {}, canon: null, sel: -1, moves: [], states: [], idx: 0 };
+    E = null; show('start');
+  }
+
+  function bind() {
+    $('btn-start').onclick = function () { goStep(0); };
+    $('btn-demo').onclick = function () {
+      S.grid = window.Cube.random().asString().split(''); S.warn = {}; S.canon = STD_CANON; S.samples = {};
+      enterReview();
+    };
+    $('btn-reset').onclick = function () {
+      var b = $('btn-reset');
+      if (resetArmed) { clearTimeout(resetArmed); resetArmed = null; b.textContent = 'Start forfra'; resetAll(); return; }
+      b.textContent = 'Tryk igen for at nulstille';
+      resetArmed = setTimeout(function () { resetArmed = null; b.textContent = 'Start forfra'; }, 3000);
+    };
+    $('btn-cam').onclick = function () { $('in-cam').value = ''; $('in-cam').click(); };
+    $('btn-gal').onclick = function () { $('in-gal').value = ''; $('in-gal').click(); };
+    $('in-cam').onchange = function (e) { loadFile(e.target.files[0]); };
+    $('in-gal').onchange = function (e) { loadFile(e.target.files[0]); };
+    $('btn-new').onclick = function () { E = null; $('cap-right').hidden = true; $('cap-actions').hidden = false; };
+    $('btn-use').onclick = function () {
+      if (!E) return;
+      S.samples[CAPTURE[S.step].f] = E.samples;
+      var nx = nextStepAfter(S.step);
+      if (nx >= 0) goStep(nx); else enterReview();
+    };
+    $('btn-to-review').onclick = enterReview;
+    $('strip').onclick = function (e) { var b = e.target.closest('.chip'); if (b) goStep(+b.dataset.i); };
+    $('r-size').oninput = function () { if (E) { E.g.size = (+this.value / 100) * Math.min(E.w, E.h); updateEditor(); } };
+    $('r-angle').oninput = function () { if (E) { E.g.angle = +this.value; updateEditor(); } };
+
+    var cv = $('cv');
+    function pt(e) { var r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; }
+    cv.addEventListener('pointerdown', function (e) { if (!E) return; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ok */ } var p = pt(e); E.drag = { dx: E.g.cx - p.x, dy: E.g.cy - p.y }; cv.style.cursor = 'grabbing'; });
+    cv.addEventListener('pointermove', function (e) { if (!E || !E.drag) return; var p = pt(e); E.g.cx = clamp(p.x + E.drag.dx, 0, E.w); E.g.cy = clamp(p.y + E.drag.dy, 0, E.h); updateEditor(); });
+    function endDrag() { if (E) E.drag = null; cv.style.cursor = 'grab'; }
+    cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+
+    $('net').onclick = function (e) {
+      var b = e.target.closest('.stk'); if (!b || b.disabled) return;
+      var i = +b.dataset.i; S.sel = S.sel === i ? -1 : i; renderReview();
+    };
+    $('pal').onclick = function (e) {
+      var b = e.target.closest('button'); if (!b || S.sel < 0) return;
+      var letter = FACES.split('').filter(function (f) { return S.canon[f] === b.dataset.c; })[0];
+      if (letter) { S.grid[S.sel] = letter; delete S.warn[S.sel]; }
+      S.sel = -1; renderReview();
+    };
+    $('btn-back').onclick = function () { goStep(0); };
+    $('btn-solve').onclick = startSolve;
+
+    $('btn-prev').onclick = function () { if (S.idx > 0) { S.idx--; renderSolve(); } };
+    $('btn-next').onclick = function () { if (S.idx < S.moves.length) { S.idx++; renderSolve(); } };
+    $('btn-jump0').onclick = function () { S.idx = 0; renderSolve(); };
+    $('chips').onclick = function (e) { var b = e.target.closest('.mv'); if (b) { S.idx = +b.dataset.i; renderSolve(); } };
+    $('btn-copy').onclick = function () {
+      var b = $('btn-copy'), txt = S.moves.join(' ');
+      function flash(t) { b.textContent = t; setTimeout(function () { b.textContent = 'Kopiér trækkene'; }, 1800); }
+      try { navigator.clipboard.writeText(txt).then(function () { flash('Kopieret'); }, function () { flash('Markér teksten nedenfor'); }); } catch (x) { flash('Markér teksten nedenfor'); }
+    };
+    document.addEventListener('keydown', function (e) {
+      if (S.screen !== 'solve') return;
+      if (e.key === 'ArrowRight') $('btn-next').click();
+      if (e.key === 'ArrowLeft') $('btn-prev').click();
+    });
+  }
+
+  buildNet(); initStart(); bind(); initWorker(); show('start');
+  /*TEST*/ window.__kubeloeser = { classifyAll: classifyAll, verify: verify, S: function () { return S; } }; /*ENDTEST*/
+})();
+</script>
